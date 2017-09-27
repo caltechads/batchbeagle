@@ -1,3 +1,8 @@
 boto3
 click
 PyYaml
+Sphinx
+sphinx-autobuild
+sphinx-click
+sphinx_rtd_theme
+wheel
