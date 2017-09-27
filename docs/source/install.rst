@@ -22,7 +22,7 @@ Clone or download from `Github <https://github.com/caltechads/batchbeagle>`_.
 
 ::
 
-    cd batchbeagle-0.0.1
+    cd batchbeagle-0.1.0
     python setup.py install
 
 
