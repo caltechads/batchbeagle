@@ -48,7 +48,7 @@ A simple ``batchbeagle.yml`` looks like this:
             instanceTypes:
               - optimal
             maxvCpus: 24
-            minCpus: 0
+            minvCpus: 0
             securityGroupIds:
               - sg-ffffffff
             subnets:
