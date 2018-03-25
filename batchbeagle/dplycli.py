@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 import csv
 import time
 
@@ -70,6 +71,8 @@ def destroy(ctx, queue):
     Destroy an existing queue.
     """
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr.disable_queue(queue)
+    time.sleep(1)
     mgr.destroy_queue(queue)
 
 @cli.group(short_help='Work with Batch Compute Environments.')
@@ -118,22 +121,25 @@ def destroy(ctx, compute_environment):
     """
 
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr.disable_compute_environment(compute_environment)
+    time.sleep(1)
     mgr.destroy_compute_environment(compute_environment)
 
 @cli.group(short_help='Work with Batch Jobs.')
 def job():
     """
-    Sub-command for building and managing Batch job descriptiouns and jobs.
+    Sub-command for building and managing Batch job definitions and jobs.
     """
     pass
 
 @job.command()
 @click.pass_context
 @click.argument('name')
-@click.argument('job_description')
+@click.argument('job_definition')
 @click.argument('queue')
 @click.option('--parameters', '-p', default=None, help="Path to the parameters file.")
-def submit(ctx, name, job_description, queue, parameters):
+@click.option('--nowait', is_flag=True, default=False, help="Do not wait for all jobs to start running")
+def submit(ctx, name, job_definition, queue, parameters, nowait):
     """
     Submit jobs to AWS Batch. Each line of the parameters file will result in a job.
     """
@@ -143,14 +149,14 @@ def submit(ctx, name, job_description, queue, parameters):
             # first line is parameter names
             reader = csv.DictReader(csvfile)
             for row in reader:
-                mgr.submit_job(name, job_description, queue, parameters=row)
+                mgr.submit_job(name, job_definition, queue, parameters=row)
     else:
-        mgr.submit_job(name, job_description, queue)
+        mgr.submit_job(name, job_definition, queue)
     while True:
         lines, runnable_count = mgr.list_jobs(queue)
         for line in lines:
             click.echo(line)
-        if runnable_count == 0:
+        if runnable_count == 0 or nowait:
             break
         time.sleep(5)
 
@@ -203,36 +209,102 @@ def terminate(ctx, queue):
 
 @job.command()
 @click.pass_context
-@click.argument('job_description')
-def create(ctx, job_description):
+@click.argument('job_definition')
+def create(ctx, job_definition):
     """
-    Create a new job description.
+    Create a new job definition.
     """
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
-    mgr.create_job_description(job_description)
+    mgr.create_job_definition(job_definition)
 
 @job.command()
 @click.pass_context
-@click.argument('job_description')
-def update(ctx, job_description):
+@click.argument('job_definition')
+def update(ctx, job_definition):
     """
-    Update an existing job description.
+    Update an existing job definition.
     """
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
-    mgr.update_job_description(job_description)
+    mgr.update_job_definition(job_definition)
 
 @job.command()
 @click.pass_context
-@click.argument('job_description')
-def deregister(ctx, job_description):
+@click.argument('job_definition')
+def deregister(ctx, job_definition):
     """
-    Deregister an existing job description.
+    Deregister an existing job definition.
     :param ctx:
-    :param job_description:
+    :param job_definition:
     :return:
     """
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
-    mgr.deregister_job_description(job_description)
+    mgr.deregister_job_definition(job_definition)
+
+@cli.command(short_help='Teardown all Batch resoures defined in a configuration')
+@click.pass_context
+def teardown(ctx):
+    """
+    Teardown (destroy/deregister) all Job Descriptions, Job Queues and Compute Environments in a config file
+    :param ctx:
+    :return:
+    """
+    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+
+    # job definitions
+    for job_definition in mgr.job_definitions.keys():
+        mgr.deregister_job_definition(job_definition)
+
+    # job queues
+    # disable
+    queues = [queue for queue in mgr.queues.keys()]
+    for queue in queues:
+        try:
+            mgr.disable_queue(queue)
+        except Exception:
+            pass
+
+    time.sleep(5)
+
+    # delete
+    while len(queues):
+
+        _queues = copy.copy(queues)
+        for queue in _queues:
+            try:
+                mgr.destroy_queue(queue)
+            except Exception:
+                pass
+            else:
+                queues.remove(queue)
+
+        time.sleep(1)
+
+    time.sleep(5)
+
+    # compute environments
+    # disable
+    compute_environments = [compute_environment for compute_environment in mgr.compute_environments.keys()]
+    for compute_environment in compute_environments:
+        try:
+            mgr.disable_compute_environment(compute_environment)
+        except Exception:
+            pass
+
+    time.sleep(5)
+
+    # delete
+    while len(compute_environments):
+
+        _compute_environments = copy.copy(compute_environments)
+        for compute_environment in _compute_environments:
+            try:
+                mgr.destroy_compute_environment(compute_environment)
+            except Exception:
+                pass
+            else:
+                compute_environments.remove(compute_environment)
+
+        time.sleep(1)
 
 def main():
     cli(obj={})
