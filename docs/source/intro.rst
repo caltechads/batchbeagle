@@ -6,7 +6,7 @@ Introduction
 To use ``batchbeagle``, you
 
 * Install ``batchbeagle``
-* Define your queues, compute environments, and job descriptions in ``batchbeagle.yml``
+* Define your queues, compute environments, and job definitions in ``batchbeagle.yml``
 * Use ``beagle`` to start managing them
 
 A simple ``batchbeagle.yml`` looks like this::

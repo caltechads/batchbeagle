@@ -701,15 +701,15 @@ class BatchManager(object):
         for queue in self.queues.values():
             queue.update_compute_environments(aws_compute_environments)
 
-    def create_job_description(self, name):
+    def create_job_definition(self, name):
         self.job_definitions[name].register()
         # self.describe()
 
-    def update_job_description(self, name):
+    def update_job_definition(self, name):
         self.job_definitions[name].register()
         # self.describe()
 
-    def deregister_job_description(self, name):
+    def deregister_job_definition(self, name):
         self.job_definitions[name].deregister()
         # self.describe()
 
