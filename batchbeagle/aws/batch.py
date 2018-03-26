@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import boto3
+import time
 import yaml
 
 class AWSRenderable(object):
@@ -594,7 +595,7 @@ class Queue(AWSLimitedUpdateRenderable):
 
     def from_aws(self, aws):
         """
-        Update our queue, jobs, job descriptions, and compute environments from the live
+        Update our queue, jobs, job definitions, and compute environments from the live
         versions in AWS.
         """
         self.__aws_queue = aws
@@ -896,3 +897,35 @@ class BatchManager(object):
         for name, jd in self.job_definitions.items():
             description.extend(self.indent_description(jd.describe()))
         return description
+
+    def assemble(self):
+
+        # compute environments
+        compute_environments = set(self.compute_environments.keys())
+        for compute_environment in compute_environments:
+            c = self.compute_environments[compute_environment]
+            if not c.exists():
+                self.create_compute_environment(compute_environment)
+            else:
+                self.update_compute_environment(compute_environment)
+
+        while True:
+            time.sleep(1)
+            if compute_environments.issubset([
+                env_dict.get('computeEnvironmentName')
+                for env_dict in self.__get_compute_environments()
+            ]):
+                break
+
+        # queues
+        queues = set(self.queues.keys())
+        for queue in queues:
+            q = self.queues[queue]
+            if not q.exists():
+                self.create_queue(queue)
+            else:
+                self.update_queue(queue)
+
+        # job definitions
+        for job_definition in self.job_definitions.keys():
+            self.create_job_definition(job_definition)

@@ -240,71 +240,27 @@ def deregister(ctx, job_definition):
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
     mgr.deregister_job_definition(job_definition)
 
-@cli.command(short_help='Teardown all Batch resoures defined in a configuration')
+@cli.command(short_help='Assemble all Batch resoures defined in a configuration')
 @click.pass_context
-def teardown(ctx):
+def assemble(ctx):
     """
-    Teardown (destroy/deregister) all Job Descriptions, Job Queues and Compute Environments in a config file
+    Assemble (create/update) all Job Descriptions, Job Queues and Compute Environments in a config file
     :param ctx:
     :return:
     """
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr.assemble()
 
-    # job definitions
-    for job_definition in mgr.job_definitions.keys():
-        mgr.deregister_job_definition(job_definition)
-
-    # job queues
-    # disable
-    queues = [queue for queue in mgr.queues.keys()]
-    for queue in queues:
-        try:
-            mgr.disable_queue(queue)
-        except Exception:
-            pass
-
-    time.sleep(5)
-
-    # delete
-    while len(queues):
-
-        _queues = copy.copy(queues)
-        for queue in _queues:
-            try:
-                mgr.destroy_queue(queue)
-            except Exception:
-                pass
-            else:
-                queues.remove(queue)
-
-        time.sleep(1)
-
-    time.sleep(5)
-
-    # compute environments
-    # disable
-    compute_environments = [compute_environment for compute_environment in mgr.compute_environments.keys()]
-    for compute_environment in compute_environments:
-        try:
-            mgr.disable_compute_environment(compute_environment)
-        except Exception:
-            pass
-
-    time.sleep(5)
-
-    # delete
-    while len(compute_environments):
-
-        _compute_environments = copy.copy(compute_environments)
-        for compute_environment in _compute_environments:
-            try:
-                mgr.destroy_compute_environment(compute_environment)
-            except Exception:
-                pass
-            else:
-                compute_environments.remove(compute_environment)
-
-        time.sleep(1)
+#@cli.command(short_help='Teardown all Batch resoures defined in a configuration')
+#@click.pass_context
+#def teardown(ctx):
+#    """
+#    Teardown (destroy/deregister) all Job Descriptions, Job Queues and Compute Environments in a config file
+#    :param ctx:
+#    :return:
+#    """
+#    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+#    mgr.teardown()
 
 def main():
     cli(obj={})
