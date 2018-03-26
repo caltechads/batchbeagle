@@ -841,7 +841,7 @@ class BatchManager(object):
                 kwargs = c.render()
                 response = self.batch.create_compute_environment(**kwargs)
             else:
-                print("Compute Environmewnt already exists.")
+                print("Compute Environment already exists.")
 
     def update_compute_environment(self, compute_environment):
         if compute_environment in self.compute_environments:
@@ -850,7 +850,7 @@ class BatchManager(object):
                 kwargs = c.render(True)
                 response = self.batch.update_compute_environment(**kwargs)
             else:
-                print("Compute Environmewnt must be created first.")
+                print("Compute Environment must be created first.")
 
     def disable_compute_environment(self, compute_environment):
         if compute_environment in self.compute_environments:
@@ -860,7 +860,7 @@ class BatchManager(object):
                 kwargs['state'] = 'DISABLED'
                 response = self.batch.update_compute_environment(**kwargs)
             else:
-                print("Compute Environmewnt must be created first.")
+                print("Compute Environment must be created first.")
 
     def destroy_compute_environment(self, compute_environment):
         if compute_environment in self.compute_environments:
@@ -872,7 +872,7 @@ class BatchManager(object):
                     computeEnvironment=compute_environment
                 )
             else:
-                print("Compute Environmewnt doesn't exist.")
+                print("Compute Environment doesn't exist.")
 
     def indent_description(self, original):
         if not original:
@@ -912,8 +912,9 @@ class BatchManager(object):
         while True:
             time.sleep(1)
             if compute_environments.issubset([
-                env_dict.get('computeEnvironmentName')
+                env_dict['computeEnvironmentName']
                 for env_dict in self.__get_compute_environments()
+                if env_dict['status'] == 'VALID'
             ]):
                 break
 
@@ -935,4 +936,62 @@ class BatchManager(object):
             self.create_job_definition(job_definition)
 
     def teardown(self):
-        pass
+
+        # job definitions
+        for job_definition in self.job_definitions.keys():
+            self.deregister_job_definition(job_definition)
+
+        # job queues
+        queues = list(self.queues.keys())
+        for queue in queues:
+            self.terminate_all_jobs(queue)
+
+        for queue_dict in self.__get_queues():
+            if queue_dict['state'] != 'DISABLED':
+                self.disable_queue(queue_dict['jobQueueName'])
+
+        enabled = [True]
+        while any(enabled):
+            time.sleep(1)
+            enabled = []
+            for queue_dict in self.__get_queues():
+                enabled.append(queue_dict['state'] != 'DISABLED' or queue_dict['status'] == 'UPDATING')
+
+        self.from_aws()
+
+        for queue_dict in self.__get_queues():
+            if queue_dict['status'] not in ('DELETED', 'DELETING'):
+                self.destroy_queue(queue_dict['jobQueueName'])
+
+        exists = [True]
+        while any(exists):
+            time.sleep(1)
+            exists = []
+            for queue_dict in self.__get_queues():
+                exists.append(queue_dict['status'] != 'DELETED')
+
+        self.from_aws()
+
+        # compute environments
+        for env_dict in self.__get_compute_environments():
+            if env_dict['state'] != 'DISABLED':
+                self.disable_compute_environment(env_dict['computeEnvironmentName'])
+
+        enabled = [True]
+        while any(enabled):
+            time.sleep(1)
+            enabled = []
+            for env_dict in self.__get_compute_environments():
+                enabled.append(env_dict['state'] != 'DISABLED' or env_dict['status'] == 'UPDATING')
+
+        self.from_aws()
+
+        for compute_environment in self.compute_environments.keys():
+            self.destroy_compute_environment(compute_environment)
+
+        exists = [True]
+        while any(exists):
+            time.sleep(1)
+            exists = []
+            for env_dict in self.__get_compute_environments():
+                exists.append(env_dict['status'] != 'DELETED')

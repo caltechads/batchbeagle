@@ -251,16 +251,16 @@ def assemble(ctx):
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
     mgr.assemble()
 
-#@cli.command(short_help='Teardown all Batch resoures defined in a configuration')
-#@click.pass_context
-#def teardown(ctx):
-#    """
-#    Teardown (destroy/deregister) all Job Descriptions, Job Queues and Compute Environments in a config file
-#    :param ctx:
-#    :return:
-#    """
-#    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
-#    mgr.teardown()
+@cli.command(short_help='Teardown all Batch resoures defined in a configuration')
+@click.pass_context
+def teardown(ctx):
+    """
+    Teardown (destroy/deregister) all Job Descriptions, Job Queues and Compute Environments in a config file
+    :param ctx:
+    :return:
+    """
+    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr.teardown()
 
 def main():
     cli(obj={})
