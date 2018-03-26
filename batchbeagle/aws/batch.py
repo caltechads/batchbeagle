@@ -917,6 +917,8 @@ class BatchManager(object):
             ]):
                 break
 
+        self.from_aws()
+
         # queues
         queues = set(self.queues.keys())
         for queue in queues:
@@ -926,6 +928,11 @@ class BatchManager(object):
             else:
                 self.update_queue(queue)
 
+        self.from_aws()
+
         # job definitions
         for job_definition in self.job_definitions.keys():
             self.create_job_definition(job_definition)
+
+    def teardown(self):
+        pass
