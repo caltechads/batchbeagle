@@ -54,7 +54,7 @@ priority
         state: enabled
         priority: 1
 
-computeEnvironmentOrder
+compute_environments
 =======================
 
 (List, Required) The set of compute environments mapped to a job queue and their order relative to each other. The job scheduler uses this parameter to determine which compute environment should execute a given job. Compute environments must be in the VALID state before you can associate them with a job queue. You can associate up to 3 compute environments with a job queue. You must specify both the compute environment name and the order. ::
@@ -230,6 +230,11 @@ minvCpus
 
 (Integer, Required) The minimum number of EC2 vCPUs that an environment should maintain.
 
+desiredvCpus
+------------
+
+(Integer, Optional) The desired number of EC2 vCPUS in the compute environment.
+
 securityGroupIds
 ----------------
 
@@ -244,11 +249,6 @@ tags
 ----
 
 (Dict, Optional) Key-value pair tags to be applied to resources that are launched in the compute environment.
-
-desiredvCpus
-------------
-
-(Integer, Optional) The desired number of EC2 vCPUS in the compute environment.
 
 ec2KeyPair
 ----------
@@ -463,6 +463,7 @@ host
 
 (Dict, Optional) The contents of the host parameter determine whether your data volume persists on the host container instance and where it is stored. If the host parameter is empty, then the Docker daemon assigns a host path for your data volume, but the data is not guaranteed to persist after the containers associated with it stop running.
 
-``sourcePath``
+sourcePath
+^^^^^^^^^^
 
 (String, Optional) The path on the host container instance that is presented to the container. If this parameter is empty, then the Docker daemon has assigned a host path for you. If the host parameter contains a sourcePath file location, then the data volume persists at the specified location on the host container instance until you delete it manually. If the sourcePath value does not exist on the host container instance, the Docker daemon creates it. If the location does exist, the contents of the source path folder are exported.
