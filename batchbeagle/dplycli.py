@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import copy
-import csv
 import time
 
 import click
@@ -145,11 +144,7 @@ def submit(ctx, name, job_definition, queue, parameters, nowait):
     """
     mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
     if parameters:
-        with open(parameters) as csvfile:
-            # first line is parameter names
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                mgr.submit_job(name, job_definition, queue, parameters=row)
+        mgr.submit_jobs(name, job_definition, queue, parameters_csv=parameters)
     else:
         mgr.submit_job(name, job_definition, queue)
     while True:
