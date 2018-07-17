@@ -757,6 +757,7 @@ class BatchManager(object):
             print('Submitting Jobs ', end='')
 
             for _parameters in parameter_sets:
+                kwargs['parameters'] = _parameters
                 self.batch.submit_job(**kwargs)
                 jobs_submitted += 1
                 if jobs_submitted % 100 == 0:
