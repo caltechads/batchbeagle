@@ -316,6 +316,21 @@ attempts
 
 (Integer, Optional) The number of times to move a job to the RUNNABLE status. You may specify between 1 and 10 attempts. If attempts is greater than one, the job is retried if it fails until it has moved to RUNNABLE that many times.
 
+timeout
+=============
+
+You can configure a timeout duration for your jobs so that if a job runs longer than that, AWS Batch terminates the job. ::
+
+    job_definitions:
+      - name: job1
+        timeout:
+            attemptDurationSeconds: 300
+
+attemptDurationSeconds
+--------
+
+(Integer, Optional) The time duration in seconds after which AWS Batch terminates your jobs if they have not finished. The minimum value for the timeout is 60 seconds.
+
 container
 =========
 

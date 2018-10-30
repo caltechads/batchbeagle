@@ -237,6 +237,7 @@ class JobDefinition(AWSRenderable):
         self.container = JobContainer(yml['container'])
         self.parameters = yml.get('parameters', None)
         self.retryStrategy = yml.get('retryStrategy', None)
+        self.timeout = yml.get('timeout', None)
 
     def load_render(self, update):
         self._add_key('jobDefinitionName', self.name)
@@ -244,6 +245,7 @@ class JobDefinition(AWSRenderable):
         self._add_key('containerProperties', self.container.render(update))
         self._add_key('parameters')
         self._add_key('retryStrategy')
+        self._add_key('timeout')
 
     def _get_all_active(self):
         active = []
@@ -321,6 +323,9 @@ class JobDefinition(AWSRenderable):
         if self.retryStrategy:
             description.append("Retry Strategy")
             description.append("  attempts: {}".format(self.retryStrategy['attempts']))
+        if self.timeout:
+            description.append("Timeout")
+            description.append("  attemptDurationSeconds: {}".format(self.timeout['attemptDurationSeconds']))
         return description
 
 
