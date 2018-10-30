@@ -638,18 +638,14 @@ class Queue(AWSLimitedUpdateRenderable):
 
 class BatchManager(object):
 
-    def __init__(self, filename='batchbeagle.yml'):
+    def __init__(self, yml={}):
         self.batch = boto3.client('batch')
         self.queues = {}
         self.compute_environments = {}
         self.job_definitions = {}
-        self.yml = self.load_config(filename)
+        self.yml = yml
         self.from_yaml()
         self.from_aws()
-
-    def load_config(self, filename):
-        with open(filename) as f:
-            return yaml.load(f)
 
     def from_yaml(self):
         if 'queues' in self.yml:
