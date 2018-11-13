@@ -11,17 +11,18 @@ from batchbeagle.aws.batch import BatchManager, Queue
 
 @click.group()
 @click.option('--filename', '-f', default='batchbeagle.yml', help="Path to the config file. Default: ./batchbeagle.yml")
+@click.option('--import_env/--no-import_env', '-i', default=False, help="Whether or not to load environment variables from the host")
 @click.pass_context
-def cli(ctx, filename):
+def cli(ctx, filename, import_env):
     """
     Configure and deploy AWS Batch jobs.
     """
-    ctx.obj['CONFIG_FILE'] = filename
+    ctx.obj['CONFIG'] = Config(filename=filename, import_env=import_env).get_yaml()
 
 @cli.command()
 @click.pass_context
 def info(ctx):
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     lines = mgr.describe()
     for line in lines:
         click.echo(line)
@@ -40,7 +41,7 @@ def create(ctx, queue):
     """
     Create a new queue.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.create_queue(queue)
 
 @queue.command()
@@ -50,7 +51,7 @@ def update(ctx, queue):
     """
     Update an existing queue.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.update_queue(queue)
 
 @queue.command()
@@ -60,7 +61,7 @@ def disable(ctx, queue):
     """
     Disable an existing queue.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.disable_queue(queue)
 
 @queue.command()
@@ -70,7 +71,7 @@ def destroy(ctx, queue):
     """
     Destroy an existing queue.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.disable_queue(queue)
     time.sleep(1)
     mgr.destroy_queue(queue)
@@ -89,7 +90,7 @@ def create(ctx, compute_environment):
     """
     Create a new compute environment.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.create_compute_environment(compute_environment)
 
 @compute.command()
@@ -99,7 +100,7 @@ def update(ctx, compute_environment):
     """
     Update an existing compute environment.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.update_compute_environment(compute_environment)
 
 @compute.command()
@@ -109,7 +110,7 @@ def disable(ctx, compute_environment):
     """
     Disable an existing compute environment.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.disable_compute_environment(compute_environment)
 
 @compute.command()
@@ -120,7 +121,7 @@ def destroy(ctx, compute_environment):
     Destroy an existing compute environment.
     """
 
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.disable_compute_environment(compute_environment)
     time.sleep(1)
     mgr.destroy_compute_environment(compute_environment)
@@ -143,7 +144,7 @@ def submit(ctx, name, job_definition, queue, parameters, nowait):
     """
     Submit jobs to AWS Batch. Each line of the parameters file will result in a job.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     if parameters:
         with open(parameters) as csvfile:
             # first line is parameter names
@@ -168,7 +169,7 @@ def list(ctx, queue):
     """
     List running jobs.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     lines, runnable_count = mgr.list_jobs(queue)
     for line in lines:
         click.echo(line)
@@ -180,7 +181,7 @@ def cancel(ctx, queue):
     """
     Cancel all jobs.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.cancel_all_jobs(queue)
     while True:
         lines, runnable_count = mgr.list_jobs(queue)
@@ -197,7 +198,7 @@ def terminate(ctx, queue):
     """
     Terminate all jobs.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.terminate_all_jobs(queue)
     while True:
         lines, runnable_count = mgr.list_jobs(queue)
@@ -214,7 +215,7 @@ def create(ctx, job_definition):
     """
     Create a new job definition.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.create_job_definition(job_definition)
 
 @job.command()
@@ -224,7 +225,7 @@ def update(ctx, job_definition):
     """
     Update an existing job definition.
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.update_job_definition(job_definition)
 
 @job.command()
@@ -237,7 +238,7 @@ def deregister(ctx, job_definition):
     :param job_definition:
     :return:
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.deregister_job_definition(job_definition)
 
 @cli.command(short_help='Assemble all Batch resoures defined in a configuration')
@@ -248,7 +249,7 @@ def assemble(ctx):
     :param ctx:
     :return:
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.assemble()
 
 @cli.command(short_help='Teardown all Batch resoures defined in a configuration')
@@ -259,7 +260,7 @@ def teardown(ctx):
     :param ctx:
     :return:
     """
-    mgr = BatchManager(filename=ctx.obj['CONFIG_FILE'])
+    mgr = BatchManager(yml=ctx.obj['CONFIG'])
     mgr.teardown()
 
 def main():

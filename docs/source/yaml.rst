@@ -482,3 +482,27 @@ sourcePath
 ^^^^^^^^^^
 
 (String, Optional) The path on the host container instance that is presented to the container. If this parameter is empty, then the Docker daemon has assigned a host path for you. If the host parameter contains a sourcePath file location, then the data volume persists at the specified location on the host container instance until you delete it manually. If the sourcePath value does not exist on the host container instance, the Docker daemon creates it. If the location does exist, the contents of the source path folder are exported.
+
+***************
+Variable interpolation in batchbeagle.yml
+***************
+
+You can use variable replacement in your job definitions to dynamically replace values from your local shell environment.
+
+You can add ``${env.<environment var>}`` to your service definition anywhere you want the value of the shell environment variable ``<environment var>``. For example, for the following ``batchbeagle.yml`` snippet::
+
+    job_definitions:
+      - name: test-job-001
+        container:
+          image: ${env.IMG_NAME}:${env.IMG_VERSION}
+          memory: 10
+          vcpus: 1
+
+batchbeagle –import_env command line option
+====
+
+If you run ``batchbeagle`` with the ``--import_env`` option, it will import your shell environment into the batchbeagle environment. Then anything you’ve defined in your shell environment will be available for ``${env.VAR}`` replacements.
+
+Example::
+
+    batchbeagle --import_env <subcommand> [options]
