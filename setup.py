@@ -21,7 +21,7 @@ setup(name="batchbeagle",
       install_requires=[
           "boto3 >= 1.4.4",
           "click >= 6.7",
-          "PyYAML == 3.12"
+          "PyYAML == 5.4"
       ],
       entry_points={'console_scripts': [
           'beagle = batchbeagle.dplycli:main'
